@@ -46,6 +46,8 @@ MainFrame::MainFrame(Model *model, Controller *controller)
     SetStatusText( "Welcome to wxWidgets!" );
 
     m_draw_area = lpanel;
+
+    m_controller->change_level(m_spinner->GetValue());
 }
 
 void MainFrame::init_menus() {

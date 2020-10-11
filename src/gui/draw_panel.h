@@ -9,12 +9,8 @@ public:
     // DrawPanel(wxWindow *parent, Model *model, Controller *controller);
 
     void on_paint(wxPaintEvent& event);
-    void draw_stuff(wxDC &dc);
-    void draw_edge(wxDC &dc, unsigned int n, int x1, int y1, int x2, int y2);
-
     void draw_lsys(wxDC& dc);
-
-    void on_lsys_changed(int n);
+    void update_lsys(int n);
 
     DECLARE_EVENT_TABLE()
 private:
