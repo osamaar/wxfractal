@@ -1,4 +1,5 @@
 #include <wx/wx.h>
+#include <wx/spinctrl.h>
 #include "../core/model.h"
 #include "controller.h"
 
