@@ -7,8 +7,12 @@ project(wxfractal CXX)
 set(
     sources
     src/main.cpp
-    src/main_gui.cpp
-    src/main_frame.cpp
+    src/core/turtle.cpp
+    src/gui/main_gui.cpp
+    src/gui/main_frame.cpp
+    src/gui/draw_panel.cpp
+    src/gui/controller.cpp
+    src/core/koch.cpp
 )
 
 # use dynamic wx
@@ -18,5 +22,6 @@ set(
 set(wxBUILD_SHARED OFF CACHE BOOL "use static wx" FORCE)
 
 add_subdirectory(vendor/wxWidgets)
-add_executable(wxfractal WIN32 ${sources})
+# add_executable(wxfractal WIN32 ${sources})
+add_executable(wxfractal ${sources})
 target_link_libraries(wxfractal wx::core wx::base wx::net)
