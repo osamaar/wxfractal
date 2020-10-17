@@ -2,13 +2,11 @@
 #include "draw_panel.h"
 #include "../common/observer.h"
 #include "../core/turtle.h"
-// #include "controller.h"
 
 wxBEGIN_EVENT_TABLE(DrawPanel, wxPanel)
     EVT_PAINT(DrawPanel::on_paint)
 wxEND_EVENT_TABLE()
 
-// DrawPanel::DrawPanel(wxWindow *parent, Model *model, Controller *controller):
 DrawPanel::DrawPanel(wxWindow *parent, Model *model)
     : wxPanel(
         parent,
@@ -18,9 +16,12 @@ DrawPanel::DrawPanel(wxWindow *parent, Model *model)
         wxFULL_REPAINT_ON_RESIZE)
     , m_lsys_observer(&DrawPanel::update_lsys, this)
     , m_model(model)
-    // , m_controller(controller)
 {
-    m_model->subject.add_observer(m_lsys_observer);
+    m_model->change_notifier.add_observer(m_lsys_observer);
+}
+
+DrawPanel::~DrawPanel() {
+    m_model->change_notifier.remove_observer(m_lsys_observer);
 }
 
 void DrawPanel::on_paint(wxPaintEvent& event) {

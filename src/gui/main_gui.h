@@ -5,9 +5,9 @@
 class MainGUI: public wxApp {
 public:
     void set_model(Model *model);
-    void set_controller(Controller *controller);
+    void set_controller(AppController *controller);
     virtual bool OnInit();
 private:
     Model *m_model;
-    Controller *m_controller;
+    AppController *m_controller;
 };

@@ -12,7 +12,7 @@ wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(wxID_ABOUT, MainFrame::on_about)
 wxEND_EVENT_TABLE()
 
-MainFrame::MainFrame(Model *model, Controller *controller)
+MainFrame::MainFrame(Model *model, MainFrameController *controller)
     : wxFrame(
         NULL,
         wxID_ANY,
@@ -22,6 +22,8 @@ MainFrame::MainFrame(Model *model, Controller *controller)
     )
     , m_model(model)
     , m_controller(controller)
+    , m_lsys_observer(&MainFrame::update_lsys, this)
+    , m_level_notifier()
 {
     wxBoxSizer *hsizer = new wxBoxSizer(wxHORIZONTAL);
     // wxBoxSizer *vsizer = new wxBoxSizer(wxVERTICAL);
@@ -47,7 +49,15 @@ MainFrame::MainFrame(Model *model, Controller *controller)
 
     m_draw_area = lpanel;
 
-    m_controller->change_level(m_spinner->GetValue());
+    m_model->change_notifier.add_observer(m_lsys_observer);
+
+    m_level_notifier.add_observer(controller->level_observer);
+    m_level_notifier.set_data(m_spinner->GetValue());
+    m_level_notifier.notify();
+}
+
+MainFrame::~MainFrame() {
+    m_model->change_notifier.remove_observer(m_lsys_observer);
 }
 
 void MainFrame::init_menus() {
@@ -81,5 +91,10 @@ void MainFrame::on_hello(wxCommandEvent& event) {
 }
 
 void MainFrame::on_level_changed(wxSpinEvent& event) { 
-    m_controller->change_level(m_spinner->GetValue());
+    m_level_notifier.set_data(m_spinner->GetValue());
+    m_level_notifier.notify();
+}
+
+void MainFrame::update_lsys(int n) {
+    m_spinner->SetValue(n);
 }

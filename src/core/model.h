@@ -4,6 +4,12 @@
 #include "lsys/lsys.h"
 
 struct Model {
-    Subject<int> subject;
+    Observable<int> change_notifier;
     LSys::LSystem lsys;
+
+    void set_level(int n) {
+        lsys.apply(n);
+        change_notifier.set_data(n);
+        change_notifier.notify();
+    }
 };

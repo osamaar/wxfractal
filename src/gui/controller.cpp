@@ -1,13 +1,20 @@
 #include "controller.h"
+#include "main_frame.h"
 
-Controller::Controller(Model *model)
+MainFrameController::MainFrameController(Model *model)
     : model(model)
-    , level_observer(&Controller::change_level, this)
+    , level_observer(&MainFrameController::set_level, this)
 {
 
 }
 
-void Controller::change_level(int n) {
-    model->lsys.apply(n);
-    model->subject.notify();
+void MainFrameController::set_level(int n) {
+    model->set_level(n);
+}
+
+AppController::AppController(Model *model)
+    : model(model)
+    , main_frame_controller(model)
+{
+
 }

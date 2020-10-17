@@ -7,14 +7,18 @@ class DrawPanel;
 
 class MainFrame: public wxFrame {
 public:
-    MainFrame(Model *model, Controller *controller);
+    MainFrame(Model *model, MainFrameController *controller);
+    ~MainFrame();
 private:
     Model *m_model;
-    Controller *m_controller;
+    MainFrameController *m_controller;
     DrawPanel *m_draw_area;
     wxSpinCtrl *m_spinner;
+    Observer<int> m_lsys_observer;
+    Observable<int> m_level_notifier;
 
     void init_menus();
+    void update_lsys(int n);
     void on_hello(wxCommandEvent& event);
     void on_exit(wxCommandEvent& event);
     void on_about(wxCommandEvent& event);

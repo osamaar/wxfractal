@@ -6,9 +6,9 @@
 template <typename T> class Observer;
 
 template <typename T>
-class Subject {
+class Observable {
 public:
-    Subject();
+    Observable();
     void add_observer(Observer<T> &observer);
     void remove_observer(Observer<T> &observer);
     void notify();
@@ -35,15 +35,15 @@ private:
 
 
 template <typename T>
-Subject<T>::Subject() : m_observers(), m_data() { }
+Observable<T>::Observable() : m_observers(), m_data() { }
 
 template <typename T>
-void Subject<T>::add_observer(Observer<T> &observer) {
+void Observable<T>::add_observer(Observer<T> &observer) {
     m_observers.push_back(&observer);
 }
 
 template <typename T>
-void Subject<T>::remove_observer(Observer<T> &observer) {
+void Observable<T>::remove_observer(Observer<T> &observer) {
     for (auto it = m_observers.begin(); it != m_observers.end(); ++it) {
         if (*it == &observer) {
             m_observers.erase(it);
@@ -53,19 +53,19 @@ void Subject<T>::remove_observer(Observer<T> &observer) {
 }
 
 template <typename T>
-void Subject<T>::notify() {
+void Observable<T>::notify() {
     for (auto &&observer: m_observers) {
         observer->notify(m_data);
     }
 }
 
 template <typename T>
-T Subject<T>::get_data() {
+T Observable<T>::get_data() {
     return m_data;
 }
 
 template <typename T>
-void Subject<T>::set_data(T data) {
+void Observable<T>::set_data(T data) {
     m_data = data;
 }
 

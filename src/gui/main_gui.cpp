@@ -4,9 +4,14 @@
 #include "controller.h"
 
 bool MainGUI::OnInit() {
-    MainFrame *frame = new MainFrame(m_model, m_controller);
+    auto mfctrl = &m_controller->main_frame_controller;
 
+    MainFrame *frame = new MainFrame(m_model, mfctrl); 
     frame->Show(true);
+
+    MainFrame *frame01 = new MainFrame(m_model, mfctrl);
+    frame01->Show(true);
+
     return true;
 }
 
@@ -14,6 +19,6 @@ void MainGUI::set_model(Model *model) {
     m_model = model;
 }
 
-void MainGUI::set_controller(Controller *controller) {
+void MainGUI::set_controller(AppController *controller) {
     m_controller = controller;
 }
