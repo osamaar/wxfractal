@@ -17,7 +17,7 @@ struct TerminalView {
     void level_changed(int n) {
         printf("==================================\n");
         printf("Iterations: %d\n", n);
-        printf("Token count: %d\n", model->lsys.sequence.size());
+        printf("Token count: %zu\n", model->lsys.sequence.size());
         printf("Sequence: %s\n\n", model->lsys.as_string().c_str());
     }
 
