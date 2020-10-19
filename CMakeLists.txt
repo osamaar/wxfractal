@@ -23,5 +23,10 @@ set(wxBUILD_SHARED OFF CACHE BOOL "use static wx" FORCE)
 
 add_subdirectory(vendor/wxWidgets)
 # add_executable(wxfractal WIN32 ${sources})
+
+# if(MSVC)
+# 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+# endif()
+
 add_executable(wxfractal ${sources})
 target_link_libraries(wxfractal wx::core wx::base wx::net)
