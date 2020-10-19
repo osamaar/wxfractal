@@ -9,9 +9,6 @@ bool MainGUI::OnInit() {
     MainFrame *frame = new MainFrame(m_model, mfctrl); 
     frame->Show(true);
 
-    MainFrame *frame01 = new MainFrame(m_model, mfctrl);
-    frame01->Show(true);
-
     return true;
 }
 

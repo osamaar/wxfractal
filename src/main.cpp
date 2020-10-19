@@ -33,8 +33,8 @@ int main(int argc, char *argv[]) {
     MainGUI *gui = new MainGUI();
     AppController controller(&model);
 
-    TerminalView tview;
-    tview.set_model(&model);
+    // TerminalView tview;
+    // tview.set_model(&model);
 
     gui->set_model(&model);
     gui->set_controller(&controller);

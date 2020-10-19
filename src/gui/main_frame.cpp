@@ -58,6 +58,7 @@ MainFrame::MainFrame(Model *model, MainFrameController *controller)
 
 MainFrame::~MainFrame() {
     m_model->change_notifier.remove_observer(m_lsys_observer);
+    m_level_notifier.remove_observer(m_controller->level_observer);
 }
 
 void MainFrame::init_menus() {
