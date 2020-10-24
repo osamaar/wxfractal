@@ -30,3 +30,9 @@ add_subdirectory(vendor/wxWidgets)
 
 add_executable(wxfractal ${sources})
 target_link_libraries(wxfractal wx::core wx::base wx::net)
+
+# set_property(TARGET wxfractal PROPERTY
+#   MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+
+# set_property(TARGET wxfractal PROPERTY
+#   MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")

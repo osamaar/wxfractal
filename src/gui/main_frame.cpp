@@ -6,6 +6,30 @@ enum {
     ID_Hello = 1
 };
 
+//////////////////////
+// Helper functions
+void add_input_field(
+    wxWindow *input_widget,
+    std::string title,
+    wxWindow *parent,
+    wxSizer *sizer
+) {
+    wxStaticText *title_widget = new wxStaticText(parent, -1, title);
+    sizer->Add(title_widget, 0, wxALIGN_RIGHT);
+    sizer->Add(input_widget, 1, wxEXPAND);
+}
+
+// void add_input_int(
+//     wxWindow *input_widget,
+//     std::string title,
+//     wxWindow *parent,
+//     wxSizer *sizer
+// ) {
+
+// }
+
+//////////////////////
+
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(ID_Hello,   MainFrame::on_hello)
     EVT_MENU(wxID_EXIT,  MainFrame::on_exit)
@@ -25,23 +49,49 @@ MainFrame::MainFrame(Model *model, MainFrameController *controller)
     , m_lsys_observer(&MainFrame::update_lsys, this)
     , m_level_notifier()
 {
+    // create widget
+    // add to parent sizer
+    // create inner sizer
+    // set inner sizer
+    // configure widget
+
     wxBoxSizer *hsizer = new wxBoxSizer(wxHORIZONTAL);
-    // wxBoxSizer *vsizer = new wxBoxSizer(wxVERTICAL);
-    // hsizer->Add(vsizer, wxEXPAND);
+    SetSizer(hsizer);
 
     DrawPanel *lpanel = new DrawPanel(this, model);
+    hsizer->Add(lpanel, 3, wxEXPAND, 5);
     lpanel->SetBackgroundColour(wxColour(32, 32, 32, 255));
     // lpanel->SetMinSize(wxSize(200, -1));
-    hsizer->Add(lpanel, 3, wxEXPAND, 5);
 
     wxPanel *rpanel = new wxPanel(this);
+    hsizer->Add(rpanel, 1, wxEXPAND, 5);
+    wxBoxSizer *rpanel_sizer = new wxBoxSizer(wxVERTICAL);
+    rpanel->SetSizer(rpanel_sizer);
     rpanel->SetBackgroundColour(wxColour(200, 200, 200, 255));
     rpanel->SetMinSize(wxSize(200, -1));
-    m_spinner = new wxSpinCtrl(rpanel);
-    m_spinner->Bind(wxEVT_SPINCTRL, &MainFrame::on_level_changed, this);
-    hsizer->Add(rpanel, 1, wxEXPAND, 5);
 
-    SetSizer(hsizer);
+    wxStaticBox *outline = new wxStaticBox(rpanel, wxID_ANY, "Parameters");
+    rpanel_sizer->Add(outline, 1, wxEXPAND | wxALL, 5);
+    wxBoxSizer *outline_expander = new wxBoxSizer(wxVERTICAL);
+    outline->SetSizer(outline_expander);
+    outline_expander->Add(0, 15);       // top spacer
+
+    wxFlexGridSizer *outline_sizer = new wxFlexGridSizer(2, wxSize(10, 10));
+    outline_expander->Add(outline_sizer, 1, wxALL | wxEXPAND, 15);
+    // outline_sizer->Add(20, 20);
+    // outline_sizer->Add(20, 20);
+
+    m_spinner = new wxSpinCtrl(outline);
+    // outline_sizer->Add(m_spinner, 0, wxALL, 20);
+    add_input_field(m_spinner, "Iterationsssssssssss", outline, outline_sizer);
+    m_spinner->Bind(wxEVT_SPINCTRL, &MainFrame::on_level_changed, this);
+
+    auto axiom_widget = new wxTextCtrl(outline, -1, "FF++FF-", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
+    add_input_field(axiom_widget, "Axiom", outline, outline_sizer);
+
+    outline_sizer->AddGrowableCol(1, 1);
+
+    Layout();
 
     init_menus();
     CreateStatusBar();
@@ -78,6 +128,10 @@ void MainFrame::init_menus() {
     SetMenuBar( menuBar );
 }
 
+void MainFrame::update_lsys(int n) {
+    m_spinner->SetValue(n);
+}
+
 void MainFrame::on_exit(wxCommandEvent& event) {
     Close(true);
 }
@@ -94,8 +148,4 @@ void MainFrame::on_hello(wxCommandEvent& event) {
 void MainFrame::on_level_changed(wxSpinEvent& event) { 
     m_level_notifier.set_data(m_spinner->GetValue());
     m_level_notifier.notify();
-}
-
-void MainFrame::update_lsys(int n) {
-    m_spinner->SetValue(n);
 }

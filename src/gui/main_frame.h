@@ -2,6 +2,7 @@
 #include <wx/spinctrl.h>
 #include "../core/model.h"
 #include "controller.h"
+#include <string>
 
 class DrawPanel;
 
@@ -19,6 +20,7 @@ private:
 
     void init_menus();
     void update_lsys(int n);
+
     void on_hello(wxCommandEvent& event);
     void on_exit(wxCommandEvent& event);
     void on_about(wxCommandEvent& event);

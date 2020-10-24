@@ -13,6 +13,10 @@ public:
     void on_lmb_up(wxMouseEvent& event);
     void on_motion(wxMouseEvent& event);
     void on_mouse_wheel(wxMouseEvent& event);
+    void on_mouse_enter(wxMouseEvent& event);
+    void on_mouse_leave(wxMouseEvent& event);
+
+    bool AcceptsFocus() const {return true;}
 
     void update_lsys(int n);
     void draw_grid(wxDC& dc, int step, wxColor color);

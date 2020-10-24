@@ -10,6 +10,8 @@ wxBEGIN_EVENT_TABLE(DrawPanel, wxPanel)
     EVT_LEFT_UP(DrawPanel::on_lmb_up)
     EVT_MOTION(DrawPanel::on_motion)
     EVT_MOUSEWHEEL(DrawPanel::on_mouse_wheel)
+    EVT_ENTER_WINDOW(DrawPanel::on_mouse_enter)
+    EVT_LEAVE_WINDOW(DrawPanel::on_mouse_leave)
 wxEND_EVENT_TABLE()
 
 DrawPanel::DrawPanel(wxWindow *parent, Model *model)
@@ -100,7 +102,6 @@ void DrawPanel::on_lmb_down(wxMouseEvent& event) {
 
 void DrawPanel::on_lmb_up(wxMouseEvent& event) {
     m_dragging = false;
-
     Refresh();
 }
 
@@ -122,6 +123,15 @@ void DrawPanel::on_mouse_wheel(wxMouseEvent& event) {
     // m_zoom = std::max(m_zoom, .01);
     m_graph_offset -= mouse_offset*(m_zoom - m_zoom_old);
 
+    Refresh();
+}
+
+void DrawPanel::on_mouse_enter(wxMouseEvent& event) {
+    SetFocus();
+}
+
+void DrawPanel::on_mouse_leave(wxMouseEvent& event) {
+    m_dragging = false;
     Refresh();
 }
 
