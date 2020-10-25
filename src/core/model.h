@@ -9,7 +9,6 @@ struct Model {
 
     void set_level(int n) {
         lsys.apply(n);
-        change_notifier.set_data(n);
-        change_notifier.notify();
+        change_notifier.notify(n);
     }
 };

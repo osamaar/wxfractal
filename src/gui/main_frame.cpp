@@ -28,6 +28,13 @@ void add_input_field(
 
 // }
 
+wxSpinCtrlDouble *new_spin_double_default(wxWindow *parent, double min, double max, double init, double inc) {
+    return new wxSpinCtrlDouble(
+        parent, -1, wxEmptyString, wxDefaultPosition,
+        wxDefaultSize, wxSP_ARROW_KEYS, 
+        min, max, init, inc);
+}
+
 //////////////////////
 
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
@@ -63,15 +70,16 @@ MainFrame::MainFrame(Model *model, MainFrameController *controller)
     lpanel->SetBackgroundColour(wxColour(32, 32, 32, 255));
     // lpanel->SetMinSize(wxSize(200, -1));
 
-    wxPanel *rpanel = new wxPanel(this);
+    auto *rpanel = new wxScrolledWindow(this);
     hsizer->Add(rpanel, 1, wxEXPAND, 5);
     wxBoxSizer *rpanel_sizer = new wxBoxSizer(wxVERTICAL);
+    rpanel->SetScrollRate(0, 5);
     rpanel->SetSizer(rpanel_sizer);
     rpanel->SetBackgroundColour(wxColour(200, 200, 200, 255));
-    rpanel->SetMinSize(wxSize(200, -1));
+    // rpanel->SetMinSize(wxSize(250, -1));
 
     wxStaticBox *outline = new wxStaticBox(rpanel, wxID_ANY, "Parameters");
-    rpanel_sizer->Add(outline, 1, wxEXPAND | wxALL, 5);
+    rpanel_sizer->Add(outline, 1, wxEXPAND | wxALL, 10);
     wxBoxSizer *outline_expander = new wxBoxSizer(wxVERTICAL);
     outline->SetSizer(outline_expander);
     outline_expander->Add(0, 15);       // top spacer
@@ -83,11 +91,26 @@ MainFrame::MainFrame(Model *model, MainFrameController *controller)
 
     m_spinner = new wxSpinCtrl(outline);
     // outline_sizer->Add(m_spinner, 0, wxALL, 20);
-    add_input_field(m_spinner, "Iterationsssssssssss", outline, outline_sizer);
+    add_input_field(m_spinner, "Iterations", outline, outline_sizer);
     m_spinner->Bind(wxEVT_SPINCTRL, &MainFrame::on_level_changed, this);
+
+    auto angle_plus_widget = new_spin_double_default(outline, 0., 9999., 90., .1);
+    add_input_field(angle_plus_widget, "Rotation (+)", outline, outline_sizer);
+
+    auto angle_minus_widget = new_spin_double_default(outline, -9999., 0., -90., .1);
+    add_input_field(angle_minus_widget, "Rotation (-)", outline, outline_sizer);
+
+    auto scale_widget = new_spin_double_default(outline, .01, 9999., 1., .01);
+    add_input_field(scale_widget, "Scale Factor", outline, outline_sizer);
+
+    auto dist_widget = new_spin_double_default(outline, .1, 9999., 1., .1);
+    add_input_field(dist_widget, "Forward Step", outline, outline_sizer);
 
     auto axiom_widget = new wxTextCtrl(outline, -1, "FF++FF-", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
     add_input_field(axiom_widget, "Axiom", outline, outline_sizer);
+
+    auto rules_widget = new wxTextCtrl(outline, -1, "F : FF+++FF++FF", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
+    add_input_field(rules_widget, "Rules", outline, outline_sizer);
 
     outline_sizer->AddGrowableCol(1, 1);
 
@@ -102,8 +125,7 @@ MainFrame::MainFrame(Model *model, MainFrameController *controller)
     m_model->change_notifier.add_observer(m_lsys_observer);
 
     m_level_notifier.add_observer(controller->level_observer);
-    m_level_notifier.set_data(m_spinner->GetValue());
-    m_level_notifier.notify();
+    m_level_notifier.notify(m_spinner->GetValue());
 }
 
 MainFrame::~MainFrame() {
@@ -146,6 +168,5 @@ void MainFrame::on_hello(wxCommandEvent& event) {
 }
 
 void MainFrame::on_level_changed(wxSpinEvent& event) { 
-    m_level_notifier.set_data(m_spinner->GetValue());
-    m_level_notifier.notify();
+    m_level_notifier.notify(m_spinner->GetValue());
 }

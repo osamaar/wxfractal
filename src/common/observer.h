@@ -12,6 +12,7 @@ public:
     void add_observer(Observer<T> &observer);
     void remove_observer(Observer<T> &observer);
     void notify();
+    void notify(T data);
     T get_data();
     void set_data(T data);
     int observer_count() { return m_observers.size(); }
@@ -57,6 +58,12 @@ void Observable<T>::notify() {
     for (auto &&observer: m_observers) {
         observer->notify(m_data);
     }
+}
+
+template <typename T>
+void Observable<T>::notify(T data) {
+    set_data(data);
+    notify();
 }
 
 template <typename T>
