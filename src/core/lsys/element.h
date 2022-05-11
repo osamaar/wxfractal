@@ -15,6 +15,11 @@ namespace LSys {
         T get_value() {
             return static_cast<Elementdata<T>*>(this)->value;
         }
+
+        template <typename T>
+        void set_value(T data) {
+            static_cast<Elementdata<T>*>(this)->value = data;
+        }
     };
 
     template <typename T>
@@ -45,7 +50,7 @@ namespace LSys {
         }
 
         template <typename T>
-        static Element with_data(ElementID &&id, T data, ElementType type_=Variable) {
+        static Element with_data(const ElementID &id, T data, ElementType type_=Variable) {
             return {id, type_, data};
         }
     };

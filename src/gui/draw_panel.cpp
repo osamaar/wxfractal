@@ -53,18 +53,20 @@ void DrawPanel::draw_lsys(wxDC& dc) {
     auto &alphabet = m_model->lsys.alphabet;
     auto &sequence = m_model->lsys.sequence;
 
-    int dist = alphabet.at("F").data->get_value<int>();
-    int angle_plus = alphabet.at("+").data->get_value<int>();
-    int angle_minus = alphabet.at("-").data->get_value<int>();
+    double dist = alphabet.at("F").data->get_value<double>();
+    double angle_plus = alphabet.at("+").data->get_value<double>();
+    double angle_minus = alphabet.at("-").data->get_value<double>();
 
     dc.Clear();
 
-    double scale_factor = 1./std::pow(3., m_model->lsys.level);
+    double scale = std::max(m_model->param_vis.scale, .1);
+    double scale_factor = 1./std::pow(1./scale, m_model->lsys.level);
 
     turtle.set_state({0, 0}, 0);
 
     for (auto &&elem : sequence) {
-        if (elem == "F") {
+        // if (elem == "F") {
+        if (m_model->is_forward_synonym(elem)) {
             turtle.forward(dist*scale_factor);
         } else if (elem == "+") {
             turtle.rotate(angle_plus);
@@ -135,7 +137,7 @@ void DrawPanel::on_mouse_leave(wxMouseEvent& event) {
     Refresh();
 }
 
-void DrawPanel::update_lsys(int n) {
+void DrawPanel::update_lsys(Model::LSysParam param) {
     Refresh();
 }
 

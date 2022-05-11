@@ -1,14 +1,19 @@
 #pragma once
 
-#include "../core/model.h"
 #include "../common/observer.h"
+#include <string>
+#include "../core/model.h"
 
 struct MainFrameController {
     Model *model;
-    Observer<int> level_observer;
+    Observer<int> apply_observer;
+    Observer<Model::LSysParam> param_observer;
+    Observer<std::string> export_dxf_observer;
 
     MainFrameController(Model *model);
-    void set_level(int n);
+    void apply(int n);
+    void set_parameters(Model::LSysParam param);
+    void export_dxf(std::string filename);
 };
 
 struct AppController {

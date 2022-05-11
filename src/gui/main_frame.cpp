@@ -3,7 +3,11 @@
 #include "draw_panel.h"
 
 enum {
-    ID_Hello = 1
+    // ID_Hello = 1001,
+    ID_EXPORT_DXF = 1001,
+    ID_BTN_APPLY,
+    ID_SPIN_DUMMY,
+    ID_OUTLINE
 };
 
 //////////////////////
@@ -38,7 +42,8 @@ wxSpinCtrlDouble *new_spin_double_default(wxWindow *parent, double min, double m
 //////////////////////
 
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
-    EVT_MENU(ID_Hello,   MainFrame::on_hello)
+    // EVT_MENU(ID_Hello,   MainFrame::on_hello)
+    EVT_MENU(ID_EXPORT_DXF,   MainFrame::on_export_dxf)
     EVT_MENU(wxID_EXIT,  MainFrame::on_exit)
     EVT_MENU(wxID_ABOUT, MainFrame::on_about)
 wxEND_EVENT_TABLE()
@@ -53,9 +58,13 @@ MainFrame::MainFrame(Model *model, MainFrameController *controller)
     )
     , m_model(model)
     , m_controller(controller)
-    , m_lsys_observer(&MainFrame::update_lsys, this)
-    , m_level_notifier()
+    , m_model_observer(&MainFrame::update_lsys, this)
+    , m_apply_notifier()
+    , m_param_notifier()
+    , m_export_dxf_notifier()
 {
+    init_menus();
+
     // create widget
     // add to parent sizer
     // create inner sizer
@@ -84,74 +93,121 @@ MainFrame::MainFrame(Model *model, MainFrameController *controller)
     outline->SetSizer(outline_expander);
     outline_expander->Add(0, 15);       // top spacer
 
+    auto apply_button = new wxButton(outline, wxID_ANY, "Apply");
+    outline_expander->Add(apply_button, 0, wxALL | wxEXPAND, 15);
+    apply_button->Bind(wxEVT_BUTTON, &MainFrame::on_apply_button_pressed, this);
+    // apply_button->SetDefault();
+
     wxFlexGridSizer *outline_sizer = new wxFlexGridSizer(2, wxSize(10, 10));
     outline_expander->Add(outline_sizer, 1, wxALL | wxEXPAND, 15);
     // outline_sizer->Add(20, 20);
     // outline_sizer->Add(20, 20);
 
-    m_spinner = new wxSpinCtrl(outline);
+    m_level_input = new wxSpinCtrl(outline);
     // outline_sizer->Add(m_spinner, 0, wxALL, 20);
-    add_input_field(m_spinner, "Iterations", outline, outline_sizer);
-    m_spinner->Bind(wxEVT_SPINCTRL, &MainFrame::on_level_changed, this);
+    add_input_field(m_level_input, "Iterations", outline, outline_sizer);
+    m_level_input->Bind(wxEVT_SPINCTRL, &MainFrame::on_level_input, this);
 
-    auto angle_plus_widget = new_spin_double_default(outline, 0., 9999., 90., .1);
-    add_input_field(angle_plus_widget, "Rotation (+)", outline, outline_sizer);
+    m_rot_plus_input = new_spin_double_default(outline, 0., 9999., 90., .1);
+    add_input_field(m_rot_plus_input, "Rotation (+)", outline, outline_sizer);
+    m_rot_plus_input->Bind(wxEVT_SPINCTRLDOUBLE, &MainFrame::on_rot_plus_input, this);
 
-    auto angle_minus_widget = new_spin_double_default(outline, -9999., 0., -90., .1);
-    add_input_field(angle_minus_widget, "Rotation (-)", outline, outline_sizer);
+    m_rot_minus_input = new_spin_double_default(outline, -9999., 0., -90., .1);
+    add_input_field(m_rot_minus_input, "Rotation (-)", outline, outline_sizer);
+    m_rot_minus_input->Bind(wxEVT_SPINCTRLDOUBLE, &MainFrame::on_rot_minus_input, this);
 
-    auto scale_widget = new_spin_double_default(outline, .01, 9999., 1., .01);
-    add_input_field(scale_widget, "Scale Factor", outline, outline_sizer);
+    m_scale_input = new_spin_double_default(outline, .01, 9999., 1., .01);
+    add_input_field(m_scale_input, "Scale Factor", outline, outline_sizer);
+    m_scale_input->Bind(wxEVT_SPINCTRLDOUBLE, &MainFrame::on_scale_input, this);
 
-    auto dist_widget = new_spin_double_default(outline, .1, 9999., 1., .1);
-    add_input_field(dist_widget, "Forward Step", outline, outline_sizer);
+    m_forward_step_input = new_spin_double_default(outline, .1, 9999., 1., .1);
+    add_input_field(m_forward_step_input, "Forward Step", outline, outline_sizer);
+    m_forward_step_input->Bind(wxEVT_SPINCTRLDOUBLE, &MainFrame::on_forward_step_input, this);
 
-    auto axiom_widget = new wxTextCtrl(outline, -1, "FF++FF-", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
-    add_input_field(axiom_widget, "Axiom", outline, outline_sizer);
+    m_axiom_input = new wxTextCtrl(outline, -1, "FF++FF-", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
+    add_input_field(m_axiom_input, "Axiom", outline, outline_sizer);
+    m_axiom_input->Bind(wxEVT_TEXT, &MainFrame::on_axiom_input, this);
 
-    auto rules_widget = new wxTextCtrl(outline, -1, "F : FF+++FF++FF", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
-    add_input_field(rules_widget, "Rules", outline, outline_sizer);
+    m_rules_input = new wxTextCtrl(outline, -1, "F : FF+++FF++FF", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
+    add_input_field(m_rules_input, "Rules", outline, outline_sizer);
+    m_rules_input->Bind(wxEVT_TEXT, &MainFrame::on_rules_input, this);
+
+    m_fsyn_input = new wxTextCtrl(outline, -1, "", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
+    add_input_field(m_fsyn_input, "Forward Synonyms", outline, outline_sizer);
+    m_rules_input->Bind(wxEVT_TEXT, &MainFrame::on_fsyn_input, this);
 
     outline_sizer->AddGrowableCol(1, 1);
 
     Layout();
 
-    init_menus();
     CreateStatusBar();
-    SetStatusText( "Welcome to wxWidgets!" );
+    // SetStatusText( "Welcome to wxWidgets!" );
 
     m_draw_area = lpanel;
 
-    m_model->change_notifier.add_observer(m_lsys_observer);
+    m_model->change_notifier.add_observer(m_model_observer);
 
-    m_level_notifier.add_observer(controller->level_observer);
-    m_level_notifier.notify(m_spinner->GetValue());
+    // m_level_notifier.add_observer(controller->level_observer);
+    // m_level_notifier.notify(m_level_input->GetValue());
+
+    m_param_notifier.add_observer(controller->param_observer);
+    // notify_param_observers();
+
+    m_apply_notifier.add_observer(controller->apply_observer);
+    m_apply_notifier.notify(0);
+
+    m_export_dxf_notifier.add_observer(controller->export_dxf_observer);
 }
 
 MainFrame::~MainFrame() {
-    m_model->change_notifier.remove_observer(m_lsys_observer);
-    m_level_notifier.remove_observer(m_controller->level_observer);
+    m_model->change_notifier.remove_observer(m_model_observer);
+    // m_level_notifier.remove_observer(m_controller->level_observer);
+    m_param_notifier.remove_observer(m_controller->param_observer);
 }
 
 void MainFrame::init_menus() {
-    wxMenu *menuFile = new wxMenu;
-    menuFile->Append(ID_Hello, "&Hello...\tCtrl-H",
-                     "Help string shown in status bar for this menu item");
-    menuFile->AppendSeparator();
-    menuFile->Append(wxID_EXIT);
+    wxMenu *menu_file = new wxMenu;
+    // menu_file->Append(ID_Hello, "&Hello...\tCtrl-H",
+    //                  "Help string shown in status bar for this menu item");
+    menu_file->Append(ID_EXPORT_DXF, "&Export DWF...\tCtrl-E",
+                     "Export resulting drawing in DWF vector format.");
+    menu_file->AppendSeparator();
+    menu_file->Append(wxID_EXIT);
 
-    wxMenu *menuHelp = new wxMenu;
-    menuHelp->Append(wxID_ABOUT);
+    wxMenu *menu_help = new wxMenu;
+    menu_help->Append(wxID_ABOUT);
 
     wxMenuBar *menuBar = new wxMenuBar;
-    menuBar->Append( menuFile, "&File" );
-    menuBar->Append( menuHelp, "&Help" );
+    menuBar->Append(menu_file, "&File");
+    menuBar->Append(menu_help, "&Help");
 
     SetMenuBar( menuBar );
 }
 
-void MainFrame::update_lsys(int n) {
-    m_spinner->SetValue(n);
+// void MainFrame::update_lsys(int n) {
+void MainFrame::update_lsys(Model::LSysParam param) {
+    m_level_input->SetValue(param.data.level);
+    m_rot_plus_input->SetValue(param.vis.rot_plus);
+    m_rot_minus_input->SetValue(param.vis.rot_minus);
+    m_scale_input->SetValue(param.vis.scale);
+    m_forward_step_input->SetValue(param.vis.forward_step);
+    m_axiom_input->ChangeValue(param.data.axiom);
+    m_rules_input->ChangeValue(param.data.rules);
+}
+
+void MainFrame::notify_param_observers() {
+    Model::LSysParam param;
+
+    param.data.level = m_level_input->GetValue();
+    param.data.axiom = m_axiom_input->GetValue();
+    param.data.rules = m_rules_input->GetValue();
+    param.vis.rot_plus = m_rot_plus_input->GetValue();
+    param.vis.rot_minus = m_rot_minus_input->GetValue();
+    param.vis.scale = m_scale_input->GetValue();
+    param.vis.forward_step = m_forward_step_input->GetValue();
+    param.vis.forward_synonyms = m_fsyn_input->GetValue();
+
+    m_param_notifier.notify(param);
 }
 
 void MainFrame::on_exit(wxCommandEvent& event) {
@@ -163,10 +219,48 @@ void MainFrame::on_about(wxCommandEvent& event) {
                   "About Hello World", wxOK | wxICON_INFORMATION );
 }
 
-void MainFrame::on_hello(wxCommandEvent& event) {
-    wxLogMessage("Hello world from wxWidgets!");
+// void MainFrame::on_hello(wxCommandEvent& event) {
+//     wxLogMessage("Hello world from wxWidgets!zzz");
+// }
+
+void MainFrame::on_export_dxf(wxCommandEvent& event) {
+    m_export_dxf_notifier.notify("DUMMY DXF FILE NAME");
 }
 
-void MainFrame::on_level_changed(wxSpinEvent& event) { 
-    m_level_notifier.notify(m_spinner->GetValue());
+void MainFrame::on_apply_button_pressed(wxCommandEvent& event) {
+    notify_param_observers();
+    m_apply_notifier.notify(0);
+}
+
+void MainFrame::on_level_input(wxSpinEvent& event) { 
+    // m_level_notifier.notify(m_level_input->GetValue());
+    // notify_param_observers();
+}
+
+void MainFrame::on_rot_plus_input(wxSpinDoubleEvent& event) {
+    notify_param_observers();
+}
+
+void MainFrame::on_rot_minus_input(wxSpinDoubleEvent& event) {
+    // notify_param_observers();
+}
+
+void MainFrame::on_scale_input(wxSpinDoubleEvent& event) {
+    // notify_param_observers();
+}
+
+void MainFrame::on_forward_step_input(wxSpinDoubleEvent& event) {
+    // notify_param_observers();
+}
+
+void MainFrame::on_axiom_input(wxCommandEvent& event) {
+    // notify_param_observers();
+}
+
+void MainFrame::on_rules_input(wxCommandEvent& event) {
+    // notify_param_observers();
+}
+
+void MainFrame::on_fsyn_input(wxCommandEvent& event) {
+    // notify_param_observers();
 }

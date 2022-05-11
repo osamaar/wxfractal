@@ -27,6 +27,8 @@ namespace LSys {
         Sequence sequence;
         int level;
 
+        static std::string sequence_to_str(Sequence seq);
+
         LSystem() : alphabet(), axiom(), rules(), level(0) { }
 
         // State peek_state();
@@ -38,13 +40,38 @@ namespace LSys {
         bool add_variables(const std::string &s);
         bool set_axiom(const std::string &a);
         bool add_rule(ElementID predecessor, const std::string &successor);
+        bool add_rule(const std::string &rule);
+        bool add_ruleset(const std::string &ruleset);
+
+        template <typename T>
+        void add_synonym(const ElementID &existing, const ElementID &synonym);
+
+        template <typename T>
+        void add_synonym_multi(const ElementID &existing, const std::string &synonyms);
 
         void apply(int n);
-        void reset();
-        std::string as_string() const;
+        void apply();
+        void reset_sequence();
+        void reset_all();
+        std::string sequence_as_string() const;
+        std::string axiom_as_string() const;
+        std::string ruleset_as_string() const;
     };
 
     ////////////////////////////////////////////////////////////////////////////
+    inline std::string LSystem::sequence_to_str(Sequence seq) {
+        std::string str;
+        for (auto &&id : seq) {
+            str.append(id);
+            str.append(" ");
+        }
+        if (!str.empty()) {
+            str.pop_back();
+        }
+
+        return str;
+    }
+
     inline bool LSystem::add_element(Element &&element) {
         alphabet.emplace(element.id, std::move(element));
         return true;
@@ -71,8 +98,8 @@ namespace LSys {
     }
 
     inline bool LSystem::set_axiom(const std::string &a) {
-        // a.substr()
         auto tokens = tokenize(a, " ");
+        axiom.clear();
         axiom.insert(axiom.end(), tokens.begin(), tokens.end());
 
         return true;
@@ -84,10 +111,33 @@ namespace LSys {
         return true;
     }
 
+    inline bool LSystem::add_rule(const std::string &rule) {
+        auto tokens = tokenize(rule, ":");
+
+        if (tokens.size() != 2) {
+            return false;
+        }
+
+        return add_rule(tokens[0], tokens[1].substr(1, tokens[1].size()-1));
+    }
+
+    inline bool LSystem::add_ruleset(const std::string &ruleset) {
+        auto tokens = tokenize(ruleset, "\n");
+        for (auto&& token : tokens) {
+            add_rule(token);
+        }
+        return true;
+        printf("rules:\n%s\n", ruleset_as_string().c_str());
+    }
+
     inline void LSystem::apply(int n) {
         level = n;
-        reset();
+        apply();
+    }
 
+    inline void LSystem::apply() {
+        reset_sequence();
+        int n = level;
         sequence = axiom;
 
         while (n > 0) {
@@ -115,22 +165,57 @@ namespace LSys {
 
     }
 
-    inline void LSystem::reset() {
+    inline void LSystem::reset_sequence() {
         // state = {};
         sequence = axiom;
     }
 
-    inline std::string LSystem::as_string() const {
+    inline void LSystem::reset_all() {
+        alphabet.clear();
+        axiom.clear();
+        rules.clear();
+        sequence.clear();
+        level = 0;
+    }
+
+    inline std::string LSystem::sequence_as_string() const {
+        return sequence_to_str(sequence);
+    }
+
+    inline std::string LSystem::axiom_as_string() const {
+        return sequence_to_str(axiom);
+    }
+
+    inline std::string LSystem::ruleset_as_string() const {
         std::string str;
-        for (auto &&id : sequence) {
-            str.append(id);
-            str.append(" ");
-        }
-        if (!str.empty()) {
-            str.pop_back();
+        for (auto&& rule : rules) {
+            str.append(rule.first);
+            str.append(": ");
+            str.append(sequence_to_str(rule.second));
+            str.append("\n");
         }
 
+        // if (str.size() > 2) {
+        //     str.erase(str.end()-2, str.end());
+        // }
+
         return str;
+    }
+
+    template <typename T>
+    void LSystem::add_synonym(const ElementID &existing, const ElementID &synonym) {
+        auto &elem = alphabet.at(existing);
+        auto value = elem.data->get_value<T>();
+        auto type_ = elem.type_;
+        add_element(LSys::Element::with_data<T>(synonym, value, type_));
+    }
+
+    template <typename T>
+    void LSystem::add_synonym_multi(const ElementID &existing, const std::string &synonyms) {
+        auto tokens = tokenize(synonyms, " ");
+        for (auto &&token: tokens) {
+            add_synonym(existing, token);
+        }
     }
 
     inline std::vector<std::string> tokenize(const std::string &str, const std::string &delim) {

@@ -18,14 +18,14 @@ public:
 
     bool AcceptsFocus() const {return true;}
 
-    void update_lsys(int n);
+    void update_lsys(Model::LSysParam param);
     void draw_grid(wxDC& dc, int step, wxColor color);
     wxPoint DrawPanel::screen_to_model_coord(int x, int y);
 
     DECLARE_EVENT_TABLE()
 private:
     Model *m_model;
-    Observer<int> m_lsys_observer;
+    Observer<Model::LSysParam> m_lsys_observer;
     wxPoint m_drag_origin;
     wxPoint m_graph_offset;
     bool m_dragging;
